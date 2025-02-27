@@ -12,5 +12,11 @@ export const TrainModel = z.object({
 
 export const GenerateImage = z.object({
     prompot: z.string(),
-    modelId: z.string()
+    modelId: z.string(),
+    quantity: z.number()
+})
+
+export const GenerateImageFromPack = z.object({
+    modelId: z.string(),
+    packId: z.string()
 })
