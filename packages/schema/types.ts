@@ -9,3 +9,8 @@ export const TrainModel = z.object({
     bald: z.boolean(),
     images: z.array(z.string())
 })
+
+export const GenerateImage = z.object({
+    prompot: z.string(),
+    modelId: z.string()
+})
