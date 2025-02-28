@@ -18,3 +18,48 @@ model User {
   username       String
   profilePicture String
 }
+
+model Model {
+  id         String          @id @default(uuid())
+  name       String
+  type       ModelType
+  age        Int
+  ethinicity ModelEthinicity
+  eyeColor   ModelEyeColor
+  bald       Boolean
+}
+
+model TrainingImages {
+  id       String @id @default(uuid())
+  imageURL String
+  modelId String
+}
+
+model OutputImages {
+  id String @id @default(uuid())
+  imageURL String
+  modelId String
+}
+
+enum ModelType {
+  Man
+  Woman
+  Other
+}
+
+enum ModelEthinicity {
+  White
+  Black
+  American
+  Indian
+  EastAsian
+}
+
+enum ModelEyeColor {
+  Brown
+  Black
+  Hazel
+  Blue
+  Green
+  Gray
+}
