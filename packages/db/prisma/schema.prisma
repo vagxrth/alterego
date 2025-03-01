@@ -46,6 +46,12 @@ model Packs {
   name String
 }
 
+model PackPrompts {
+  id String @id @default(uuid())
+  prompt String
+  packId String
+}
+
 enum ModelType {
   Man
   Woman
