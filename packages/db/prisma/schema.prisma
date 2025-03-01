@@ -32,13 +32,18 @@ model Model {
 model TrainingImages {
   id       String @id @default(uuid())
   imageURL String
-  modelId String
+  modelId  String
 }
 
 model OutputImages {
-  id String @id @default(uuid())
+  id       String @id @default(uuid())
   imageURL String
-  modelId String
+  modelId  String
+}
+
+model Packs {
+  id   String @id @default(uuid())
+  name String
 }
 
 enum ModelType {
