@@ -87,8 +87,11 @@ app.post('/pack/generate', async(req, res) => {
     })
 })
 
-app.get('/pack/bulk', (req, res) => {
-
+app.get('/pack/bulk', async(req, res) => {
+    const packs = await prismaClient.packs.findMany({})
+    res.json({
+        packs
+    })
 })
 
 app.get('/image', (req, res) => {
