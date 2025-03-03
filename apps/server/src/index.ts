@@ -1,5 +1,5 @@
 import { prismaClient } from './../../../packages/db/index';
-import { TrainModel } from './../../../packages/schema/types';
+import { GenerateImage, TrainModel } from './../../../packages/schema/types';
 import express from 'express';
 
 const PORT = process.env.PORT || 8080;
@@ -35,7 +35,14 @@ app.post('/train', async(req, res) => {
 })
 
 app.post('/generate', (req, res) => {
+    const parsedBody = GenerateImage.safeParse(req.body);
 
+    if (!parsedBody.success) {
+        res.status(411).json({
+            message: "Incorrect Inputs!"
+        })
+        return
+    }
 })
 
 app.post('/pack/generate', (req, res) => {
