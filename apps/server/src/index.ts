@@ -3,6 +3,7 @@ import { TrainModel } from './../../../packages/schema/types';
 import express from 'express';
 
 const PORT = process.env.PORT || 8080;
+const USER_ID = "0410"
 
 const app = express();
 app.use(express.json())
@@ -23,7 +24,8 @@ app.post('/train', async(req, res) => {
             age: parsedBody.data.age,
             ethinicity: parsedBody.data.ethinicity,
             eyeColor: parsedBody.data.eyeColor,
-            bald: parsedBody.data.bald
+            bald: parsedBody.data.bald,
+            userId: USER_ID
         }
     })
 
