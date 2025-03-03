@@ -45,7 +45,7 @@ model TrainingImages {
 
 model OutputImages {
   id        String           @id @default(uuid())
-  imageURL  String
+  imageURL  String           @default("")
   userId    String
   modelId   String
   prompt    String

@@ -11,7 +11,7 @@ export const TrainModel = z.object({
 })
 
 export const GenerateImage = z.object({
-    prompot: z.string(),
+    prompt: z.string(),
     modelId: z.string(),
     quantity: z.number()
 })

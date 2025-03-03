@@ -34,7 +34,7 @@ app.post('/train', async(req, res) => {
     })
 })
 
-app.post('/generate', (req, res) => {
+app.post('/generate', async(req, res) => {
     const parsedBody = GenerateImage.safeParse(req.body);
 
     if (!parsedBody.success) {
@@ -43,6 +43,19 @@ app.post('/generate', (req, res) => {
         })
         return
     }
+
+    const data = await prismaClient.outputImages.create({
+        data: {
+            prompt: parsedBody.data.prompt,
+            userId: USER_ID,
+            modelId: parsedBody.data.modelId,
+            imageURL: ""
+        }
+    })
+
+    res.json({
+        imageId: data.id
+    })
 })
 
 app.post('/pack/generate', (req, res) => {
