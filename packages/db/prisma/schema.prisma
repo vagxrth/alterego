@@ -29,6 +29,7 @@ model Model {
   ethinicity     ModelEthinicity
   eyeColor       ModelEyeColor
   bald           Boolean
+  userId         String
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   trainingImages TrainingImages[]
