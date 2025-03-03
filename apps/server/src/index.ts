@@ -1,5 +1,5 @@
 import { prismaClient } from './../../../packages/db/index';
-import { GenerateImage, TrainModel } from './../../../packages/schema/types';
+import { GenerateImage, GenerateImageFromPack, TrainModel } from './../../../packages/schema/types';
 import express from 'express';
 
 const PORT = process.env.PORT || 8080;
@@ -58,8 +58,33 @@ app.post('/generate', async(req, res) => {
     })
 })
 
-app.post('/pack/generate', (req, res) => {
+app.post('/pack/generate', async(req, res) => {
+    const parsedBody = GenerateImageFromPack.safeParse(req.body);
+    if (!parsedBody.success) {
+        res.status(411).json({
+            message: "Incorrect Inputs!"
+        })
+        return
+    }
 
+    const prompts = await prismaClient.packPrompts.findMany({
+        where: {
+            packId: parsedBody.data.packId
+        }
+    })
+
+    const images = await prismaClient.outputImages.createManyAndReturn({
+        data: prompts.map((prompt) => ({
+            prompt: prompt.prompt,
+            userId: USER_ID,
+            modelId: parsedBody.data.modelId,
+            imageURL: ""
+        }))
+    })
+
+    res.json({
+        images: images.map((image) => image.id)
+    })
 })
 
 app.get('/pack/bulk', (req, res) => {
