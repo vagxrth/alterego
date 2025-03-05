@@ -13,6 +13,15 @@ export class FalAIModel extends BaseModel {
                 loras: [{ path: tensorPath, scale: 1 }]
             }
         });
-        return result
+        return result;
+    }
+
+    private async trainModel(zipURL: string, triggerWord: string) {
+        const { request_id } = await fal.queue.submit("fal-ai/flux-lora-fast-training", {
+            input: {
+                images_data_url: zipURL
+            },
+            webhookUrl: `${process.env.WEBHOOK_BASE_URL}/fal-ai/webhook`,
+        });
     }
 }
