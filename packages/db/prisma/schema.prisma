@@ -38,6 +38,7 @@ model Model {
   updatedAt      DateTime            @updatedAt
   trainingImages TrainingImages[]
   outputImages   OutputImages[]
+  @@index([falAIRequestId])
 }
 
 model TrainingImages {
@@ -58,6 +59,7 @@ model OutputImages {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   model     Model            @relation(fields: [modelId], references: [id])
+  @@index([falAIRequestId])
 }
 
 model Packs {

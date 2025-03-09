@@ -113,10 +113,9 @@ app.get('/image/bulk', async(req, res) => {
     })
 })
 
-app.post('/fal-ai/webhook/train', (req, res) => {
-    console.log(req.body);
+app.post('/fal-ai/webhook/train', async(req, res) => {
     const requestId = req.body.request_id;
-    await prismaClient.model.update({
+    await prismaClient.model.updateMany({
         where: {
             falAIRequestId: requestId
         },
@@ -130,10 +129,9 @@ app.post('/fal-ai/webhook/train', (req, res) => {
     })
 })
 
-app.post('/fal-ai/webhook/image', (req, res) => {
-    console.log(req.body);
+app.post('/fal-ai/webhook/image', async(req, res) => {
     const requestId = req.body.request_id;
-    await prismaClient.model.update({
+    await prismaClient.outputImages.updateMany({
         where: {
             falAIRequestId: requestId
         },
