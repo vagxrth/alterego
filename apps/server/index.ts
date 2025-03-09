@@ -121,7 +121,7 @@ app.post('/fal-ai/webhook/train', (req, res) => {
             falAIRequestId: requestId
         },
         data: {
-            trainingStatus: "Completed",
+            trainingStatus: "Generated",
             tensorPath: req.body.tensor_path
         }
     })
@@ -139,7 +139,7 @@ app.post('/fal-ai/webhook/image', (req, res) => {
         },
         data: {
             status: "Generated",
-            imageURL: req.body.image_url;
+            imageURL: req.body.image_url
         }
     })
     res.json({
