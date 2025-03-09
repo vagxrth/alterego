@@ -34,31 +34,26 @@ model Model {
   tensorPath     String?
   trainingStatus ModelTrainingStatus @default(Pending)
   falAIRequestId String?
+  zipURL         String
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
-  trainingImages TrainingImages[]
   outputImages   OutputImages[]
+
   @@index([falAIRequestId])
 }
 
-model TrainingImages {
-  id       String @id @default(uuid())
-  imageURL String
-  modelId  String
-  model    Model  @relation(fields: [modelId], references: [id])
-}
-
 model OutputImages {
-  id        String           @id @default(uuid())
-  imageURL  String           @default("")
-  userId    String
-  modelId   String
-  prompt    String
-  status    ModelImageStatus @default(Pending)
+  id             String           @id @default(uuid())
+  imageURL       String           @default("")
+  userId         String
+  modelId        String
+  prompt         String
+  status         ModelImageStatus @default(Pending)
   falAIRequestId String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  model     Model            @relation(fields: [modelId], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  model          Model            @relation(fields: [modelId], references: [id])
+
   @@index([falAIRequestId])
 }
 

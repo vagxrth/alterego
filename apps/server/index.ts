@@ -21,7 +21,7 @@ app.post('/train', async(req, res) => {
         return
     }
 
-    const { request_id } = await falAIClient.trainModel("", parsedBody.data.name)
+    const { request_id } = await falAIClient.trainModel(parsedBody.data.zipURL, parsedBody.data.name)
 
     const data = await prismaClient.model.create({
         data: {
@@ -32,6 +32,7 @@ app.post('/train', async(req, res) => {
             eyeColor: parsedBody.data.eyeColor,
             bald: parsedBody.data.bald,
             userId: USER_ID,
+            zipURL: parsedBody.data.zipURL,
             falAIRequestId: request_id
         }
     })
