@@ -2,13 +2,42 @@ import { prismaClient } from '../../packages/db/index';
 import { GenerateImage, GenerateImageFromPack, TrainModel } from '../../packages/schema/types';
 import express from 'express';
 import { FalAIModel } from './models/FalAIModel';
+import { S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const PORT = process.env.PORT || 8080;
 const USER_ID = "0410"
 const falAIClient = new FalAIModel();
 
+const s3Client = new S3Client({
+    region: 'auto',
+    credentials: {
+        accessKeyId: process.env.ACCESS_KEY || '',
+        secretAccessKey: process.env.SECRET_KEY || ''
+    }
+});
+
 const app = express();
 app.use(express.json())
+
+app.get('/pre-signed-url', async (req, res) => {
+    const key = `models/${Date.now()}_${Math.random()}.zip`;
+    const command = new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: key
+    });
+    const url = await getSignedUrl(s3Client, command, {
+        expiresIn: 60 * 5
+    });
+    res.json({
+        url,
+        key
+    });
+});
 
 app.post('/train', async(req, res) => {
     const parsedBody = TrainModel.safeParse(req.body)
@@ -97,12 +126,15 @@ app.post('/pack/generate', async(req, res) => {
         }
     })
 
+    let requestIds: { request_id: string }[] = await Promise.all(prompts.map((prompt) => falAIClient.generateImage(prompt.prompt, parsedBody.data.modelId)))
+
     const images = await prismaClient.outputImages.createManyAndReturn({
-        data: prompts.map((prompt) => ({
+        data: prompts.map((prompt, index) => ({
             prompt: prompt.prompt,
             userId: USER_ID,
             modelId: parsedBody.data.modelId,
-            imageURL: ""
+            imageURL: "",
+            falAIRequestId: requestIds[index].request_id 
         }))
     })
 

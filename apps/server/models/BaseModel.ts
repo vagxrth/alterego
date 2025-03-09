@@ -3,11 +3,11 @@ export class BaseModel {
 
     }
 
-    private async generateImage(prompt: string, tensorPath: string) {
-
+    public async generateImage(prompt: string, tensorPath: string): Promise<{ request_id: string; response_url: string }> {
+        throw new Error("Method Not Implemented!");
     }
 
-    private async trainModel(inputImages: string[], triggerWord: string) {
-
+    public async trainModel(zipURL: string, triggerWord: string): Promise<{ request_id: string; response_url: string }> {
+        throw new Error("Method Not Implemented!");
     }
 }
