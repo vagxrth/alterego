@@ -132,6 +132,16 @@ app.post('/fal-ai/webhook/train', (req, res) => {
 
 app.post('/fal-ai/webhook/image', (req, res) => {
     console.log(req.body);
+    const requestId = req.body.request_id;
+    await prismaClient.model.update({
+        where: {
+            falAIRequestId: requestId
+        },
+        data: {
+            status: "Generated",
+            imageURL: req.body.image_url;
+        }
+    })
     res.json({
         message: "Webhook Received"
     })
