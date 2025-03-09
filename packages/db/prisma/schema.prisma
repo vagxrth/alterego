@@ -22,7 +22,7 @@ model User {
 }
 
 model Model {
-  id             String           @id @default(uuid())
+  id             String              @id @default(uuid())
   name           String
   type           ModelType
   age            Int
@@ -30,8 +30,11 @@ model Model {
   eyeColor       ModelEyeColor
   bald           Boolean
   userId         String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  triggerWord    String?
+  tensorPath     String?
+  trainingStatus ModelTrainingStatus @default(Pending)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
   trainingImages TrainingImages[]
   outputImages   OutputImages[]
 }
@@ -92,6 +95,12 @@ enum ModelEyeColor {
 }
 
 enum ModelImageStatus {
+  Pending
+  Generated
+  Failed
+}
+
+enum ModelTrainingStatus {
   Pending
   Generated
   Failed
