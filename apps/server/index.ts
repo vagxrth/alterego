@@ -113,7 +113,14 @@ app.get('/image/bulk', async(req, res) => {
     })
 })
 
-app.post('/fal-ai/webhook', (req, res) => {
+app.post('/fal-ai/webhook/train', (req, res) => {
+    console.log(req.body);
+    res.json({
+        message: "Webhook Received"
+    })
+})
+
+app.post('/fal-ai/webhook/image', (req, res) => {
     console.log(req.body);
     res.json({
         message: "Webhook Received"
