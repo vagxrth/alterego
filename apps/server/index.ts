@@ -1,15 +1,18 @@
 import { prismaClient } from '../../packages/db/index';
 import { GenerateImage, GenerateImageFromPack, TrainModel } from '../../packages/schema/types';
 import express from 'express';
+import { FalAIModel } from './models/FalAIModel';
 
 const PORT = process.env.PORT || 8080;
 const USER_ID = "0410"
+const falAIClient = new FalAIModel();
 
 const app = express();
 app.use(express.json())
 
 app.post('/train', async(req, res) => {
     const parsedBody = TrainModel.safeParse(req.body)
+    const images = req.body.images;
 
     if (!parsedBody.success) {
         res.status(411).json({
@@ -17,6 +20,9 @@ app.post('/train', async(req, res) => {
         })
         return
     }
+
+    const { request_id } = await falAIClient.trainModel("", parsedBody.data.name)
+
     const data = await prismaClient.model.create({
         data: {
             name: parsedBody.data.name,
@@ -25,7 +31,8 @@ app.post('/train', async(req, res) => {
             ethinicity: parsedBody.data.ethinicity,
             eyeColor: parsedBody.data.eyeColor,
             bald: parsedBody.data.bald,
-            userId: USER_ID
+            userId: USER_ID,
+            falAIRequestId: request_id
         }
     })
 
@@ -44,12 +51,28 @@ app.post('/generate', async(req, res) => {
         return
     }
 
+    const model = await prismaClient.model.findUnique({
+        where: {
+            id: parsedBody.data.modelId
+        }
+    })
+
+    if (!model || !model.tensorPath) {
+        res.status(411).json({
+            message: "Model Not Found!"
+        })
+        return;
+    }
+
+    const { request_id } = await falAIClient.generateImage(parsedBody.data.prompt, model?.tensorPath)
+
     const data = await prismaClient.outputImages.create({
         data: {
             prompt: parsedBody.data.prompt,
             userId: USER_ID,
             modelId: parsedBody.data.modelId,
-            imageURL: ""
+            imageURL: "",
+            falAIRequestId: request_id
         }
     })
 
@@ -125,7 +148,7 @@ app.post('/fal-ai/webhook/train', async(req, res) => {
         }
     })
     res.json({
-        message: "Webhook Received"
+        message: "Webhook Received!"
     })
 })
 
@@ -141,7 +164,7 @@ app.post('/fal-ai/webhook/image', async(req, res) => {
         }
     })
     res.json({
-        message: "Webhook Received"
+        message: "Webhook Received!"
     })
 })
 
