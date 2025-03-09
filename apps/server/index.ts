@@ -115,6 +115,16 @@ app.get('/image/bulk', async(req, res) => {
 
 app.post('/fal-ai/webhook/train', (req, res) => {
     console.log(req.body);
+    const requestId = req.body.request_id;
+    await prismaClient.model.update({
+        where: {
+            falAIRequestId: requestId
+        },
+        data: {
+            trainingStatus: "Completed",
+            tensorPath: req.body.tensor_path
+        }
+    })
     res.json({
         message: "Webhook Received"
     })
