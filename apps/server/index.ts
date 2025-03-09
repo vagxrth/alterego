@@ -113,6 +113,13 @@ app.get('/image/bulk', async(req, res) => {
     })
 })
 
+app.post('/fal-ai/webhook', (req, res) => {
+    console.log(req.body);
+    res.json({
+        message: "Webhook Received"
+    })
+})
+
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`)
 })
