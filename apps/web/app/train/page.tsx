@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from "../../components/ui/select"
 import { Switch } from '../../components/ui/switch'
+import { ImageUpload } from '../../components/ImageUpload'
 
 const page = () => {
     return (
@@ -89,6 +90,7 @@ const page = () => {
                         </div>
                     </form>
                 </CardContent>
+                <ImageUpload />
                 <CardFooter className="flex justify-between">
                     <Button variant="outline">Cancel</Button>
                     <Button>Create Model</Button>
