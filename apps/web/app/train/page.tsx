@@ -22,8 +22,8 @@ import { ImageUpload } from '../../components/ImageUpload'
 
 const page = () => {
     return (
-        <div className='flex flex-col items-center justify-center h-screen'>
-            <Card className="w-[350px]">
+        <div className='flex items-center justify-center min-h-screen py-8'>
+            <Card className="w-[450px] max-w-[95vw]">
                 <CardHeader>
                     <CardTitle>Create project</CardTitle>
                     <CardDescription>Deploy your new project in one-click.</CardDescription>
@@ -83,14 +83,17 @@ const page = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className='flex flex-col space-y-1.5'>
-                                <Label htmlFor="bald">Bald</Label>
-                                <Switch />
+                            <div className='flex items-center justify-between'>
+                                <Label htmlFor="bald" className="cursor-pointer">Bald</Label>
+                                <Switch id="bald" />
+                            </div>
+                            
+                            <div className="mt-2">
+                                <ImageUpload />
                             </div>
                         </div>
                     </form>
                 </CardContent>
-                <ImageUpload />
                 <CardFooter className="flex justify-between">
                     <Button variant="outline">Cancel</Button>
                     <Button>Create Model</Button>
