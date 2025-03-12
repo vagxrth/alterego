@@ -1,18 +1,24 @@
 'use client'
 
 import React, { useState, useRef } from 'react';
-import { Cloud, X, Plus } from 'lucide-react';
+import { Cloud, X, Plus, Upload } from 'lucide-react';
 import Image from 'next/image';
+import JSZip from 'jszip';
+import axios from 'axios';
+import { BACKEND_URL } from '../app/config';
 
 interface ImageUploaderProps {
   onImagesUpload?: (files: File[]) => void;
   maxImages?: number;
+  onZipUploaded?: (zipUrl: string, zipKey: string) => void;
 }
 
-export function ImageUpload({ onImagesUpload, maxImages = 10 }: ImageUploaderProps) {
+export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: ImageUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -77,6 +83,108 @@ export function ImageUpload({ onImagesUpload, maxImages = 10 }: ImageUploaderPro
     setPreviews(updatedPreviews);
     setFiles(updatedFiles);
     onImagesUpload?.(updatedFiles);
+  };
+
+  const zipAndUploadImages = async () => {
+    if (files.length === 0) return;
+    
+    try {
+      setIsUploading(true);
+      setUploadProgress(10);
+      
+      // Step 1: Create a zip file containing all images
+      const zip = new JSZip();
+      
+      // Add each file to the zip
+      files.forEach((file, index) => {
+        zip.file(`image_${index + 1}.${file.name.split('.').pop()}`, file);
+      });
+      
+      // Generate the zip file
+      setUploadProgress(30);
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      }, (metadata) => {
+        // Update progress during zip creation
+        setUploadProgress(30 + Math.floor(metadata.percent * 0.3));
+      });
+      
+      // Step 2: Get a presigned URL from the backend
+      setUploadProgress(60);
+      console.log('Requesting presigned URL from:', `${BACKEND_URL}/pre-signed-url`);
+      
+      // Add a timestamp to prevent caching issues
+      const presignedResponse = await axios.get(`${BACKEND_URL}/pre-signed-url?t=${Date.now()}`);
+      console.log('Presigned URL response:', presignedResponse.data);
+      const { url: presignedUrl, key } = presignedResponse.data;
+      
+      if (!presignedUrl) {
+        throw new Error('No presigned URL received from server');
+      }
+      
+      // Step 3: Upload the zip file to the presigned URL
+      setUploadProgress(70);
+      console.log('Uploading to presigned URL:', presignedUrl);
+      
+      try {
+        // Use fetch instead of axios for the S3 upload
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          body: zipBlob,
+          headers: {
+            'Content-Type': 'application/zip',
+          },
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error('Upload response:', errorText);
+          throw new Error(`Upload failed with status: ${uploadResponse.status} - ${errorText}`);
+        }
+        
+        // Step 4: Notify parent component about successful upload
+        setUploadProgress(100);
+        
+        // Construct the final URL for the zip file (remove query parameters)
+        const zipUrl = presignedUrl.split('?')[0];
+        console.log('Final zip URL:', zipUrl);
+        
+        // Notify parent component
+        if (onZipUploaded) {
+          onZipUploaded(zipUrl, key);
+        }
+      } catch (uploadError: any) {
+        console.error('Error during S3 upload:', uploadError);
+        throw new Error(`S3 upload failed: ${uploadError.message}`);
+      }
+      
+      setIsUploading(false);
+    } catch (error: any) {
+      console.error('Error uploading images:', error);
+      
+      // More detailed error logging
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error response headers:', error.response.headers);
+        alert(`Upload failed: ${error.response.status} - ${error.response.data?.message || 'Server error'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+        alert('Upload failed: No response from server. Check your network connection.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+        alert(`Upload failed: ${error.message}`);
+      }
+      
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -150,10 +258,42 @@ export function ImageUpload({ onImagesUpload, maxImages = 10 }: ImageUploaderPro
           </div>
         )}
       </div>
-      {previews.length > 0 && (
-        <p className="text-xs text-gray-500 mt-1 text-right">
-          {previews.length} of {maxImages} images
-        </p>
+      
+      <div className="mt-3 flex justify-between items-center">
+        {previews.length > 0 && (
+          <p className="text-xs text-gray-500">
+            {previews.length} of {maxImages} images
+          </p>
+        )}
+        
+        {previews.length > 0 && (
+          <button
+            onClick={zipAndUploadImages}
+            disabled={isUploading}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${
+              isUploading 
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            <Upload className="w-4 h-4 mr-1" />
+            {isUploading ? 'Uploading...' : 'Upload Images'}
+          </button>
+        )}
+      </div>
+      
+      {isUploading && (
+        <div className="mt-2">
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 mt-1 text-right">
+            {uploadProgress}%
+          </p>
+        </div>
       )}
     </div>
   );
