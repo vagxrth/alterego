@@ -6,6 +6,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -18,25 +19,55 @@ const s3Client = new S3Client({
     credentials: {
         accessKeyId: process.env.ACCESS_KEY || '',
         secretAccessKey: process.env.SECRET_KEY || ''
-    }
+    },
+    endpoint: process.env.ENDPOINT,
+    forcePathStyle: true
 });
 
 const app = express();
-app.use(express.json())
+app.use(express.json());
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    maxAge: 86400 // 24 hours
+}));
 
 app.get('/pre-signed-url', async (req, res) => {
-    const key = `models/${Date.now()}_${Math.random()}.zip`;
-    const command = new PutObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Key: key
-    });
-    const url = await getSignedUrl(s3Client, command, {
-        expiresIn: 60 * 5
-    });
-    res.json({
-        url,
-        key
-    });
+    try {
+        const key = `models/${Date.now()}_${Math.random()}.zip`;
+        const command = new PutObjectCommand({
+            Bucket: process.env.BUCKET_NAME || '',
+            Key: key,
+            ContentType: 'application/zip',
+            ChecksumAlgorithm: 'CRC32'
+        });
+        
+        console.log('Creating presigned URL with:', {
+            bucket: process.env.BUCKET_NAME,
+            key,
+            region: 'auto',
+            endpoint: process.env.ENDPOINT
+        });
+        
+        const url = await getSignedUrl(s3Client, command, {
+            expiresIn: 60 * 5
+        });
+        
+        console.log('Generated presigned URL:', url);
+        
+        res.json({
+            url,
+            key
+        });
+    } catch (error: any) {
+        console.error('Error generating presigned URL:', error);
+        res.status(500).json({
+            error: 'Failed to generate presigned URL',
+            message: error.message || 'Unknown error'
+        });
+    }
 });
 
 app.post('/train', async(req, res) => {

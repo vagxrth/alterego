@@ -1,10 +1,11 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import { Button } from "../../components/ui/button"
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "../../components/ui/card"
@@ -19,8 +20,78 @@ import {
 } from "../../components/ui/select"
 import { Switch } from '../../components/ui/switch'
 import { ImageUpload } from '../../components/ImageUpload'
+import axios from 'axios'
+import { BACKEND_URL } from '../config'
+import { useRouter } from 'next/navigation'
 
-const page = () => {
+const TrainPage = () => {
+    const router = useRouter();
+    const [formData, setFormData] = useState({
+        name: '',
+        type: '',
+        age: '',
+        ethinicity: '',
+        eyeColor: '',
+        bald: false,
+        zipURL: '',
+        zipKey: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSelectChange = (id: string, value: string) => {
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSwitchChange = (checked: boolean) => {
+        setFormData(prev => ({ ...prev, bald: checked }));
+    };
+
+    const handleZipUploaded = (zipUrl: string, zipKey: string) => {
+        setFormData(prev => ({ 
+            ...prev, 
+            zipURL: zipUrl,
+            zipKey: zipKey
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!formData.name || !formData.type || !formData.zipURL) {
+            alert('Please fill in all required fields and upload images');
+            return;
+        }
+        
+        try {
+            setIsSubmitting(true);
+            
+            await axios.post(`${BACKEND_URL}/train`, {
+                name: formData.name,
+                type: formData.type,
+                age: formData.age,
+                ethinicity: formData.ethinicity,
+                eyeColor: formData.eyeColor,
+                bald: formData.bald,
+                zipURL: formData.zipURL
+            });
+            
+            // Redirect to model page or dashboard
+            alert('Model training started successfully!');
+            router.push('/models'); // Adjust this to your app's routing
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('Failed to submit form. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className='flex items-center justify-center min-h-screen py-8'>
             <Card className="w-[450px] max-w-[95vw]">
@@ -29,15 +100,21 @@ const page = () => {
                     <CardDescription>Deploy your new project in one-click.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form>
+                    <form onSubmit={handleSubmit}>
                         <div className="grid w-full items-center gap-4">
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="name">Name</Label>
-                                <Input id="name" placeholder="Name of the model" />
+                                <Input 
+                                    id="name" 
+                                    placeholder="Name of the model" 
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="type">Type</Label>
-                                <Select>
+                                <Select onValueChange={(value) => handleSelectChange('type', value)}>
                                     <SelectTrigger id='type'>
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
@@ -50,11 +127,16 @@ const page = () => {
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="age">Age</Label>
-                                <Input id="age" placeholder="Age of the model" />
+                                <Input 
+                                    id="age" 
+                                    placeholder="Age of the model" 
+                                    value={formData.age}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className='flex flex-col space-y-1.5'>
                                 <Label htmlFor="ethinicity">Ethinicity</Label>
-                                <Select>
+                                <Select onValueChange={(value) => handleSelectChange('ethinicity', value)}>
                                     <SelectTrigger id='ethinicity'>
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
@@ -68,9 +150,9 @@ const page = () => {
                                 </Select>
                             </div>
                             <div className='flex flex-col space-y-1.5'>
-                                <Label htmlFor="eyecolor">Eye Color</Label>
-                                <Select>
-                                    <SelectTrigger id='eyecolor'>
+                                <Label htmlFor="eyeColor">Eye Color</Label>
+                                <Select onValueChange={(value) => handleSelectChange('eyeColor', value)}>
+                                    <SelectTrigger id='eyeColor'>
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                     <SelectContent position="popper">
@@ -85,22 +167,36 @@ const page = () => {
                             </div>
                             <div className='flex items-center justify-between'>
                                 <Label htmlFor="bald" className="cursor-pointer">Bald</Label>
-                                <Switch id="bald" />
+                                <Switch 
+                                    id="bald" 
+                                    checked={formData.bald}
+                                    onCheckedChange={handleSwitchChange}
+                                />
                             </div>
                             
                             <div className="mt-2">
-                                <ImageUpload />
+                                <ImageUpload 
+                                    onImagesUpload={setUploadedFiles}
+                                    onZipUploaded={handleZipUploaded}
+                                    maxImages={10}
+                                />
                             </div>
+                        </div>
+                        
+                        <div className="flex justify-between mt-6">
+                            <Button type="button" variant="outline">Cancel</Button>
+                            <Button 
+                                type="submit" 
+                                disabled={isSubmitting || !formData.zipURL}
+                            >
+                                {isSubmitting ? 'Creating...' : 'Create Model'}
+                            </Button>
                         </div>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                    <Button variant="outline">Cancel</Button>
-                    <Button>Create Model</Button>
-                </CardFooter>
             </Card>
         </div>
     )
 }
 
-export default page
+export default TrainPage
