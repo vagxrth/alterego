@@ -20,15 +20,18 @@ const s3Client = new S3Client({
         accessKeyId: process.env.ACCESS_KEY || '',
         secretAccessKey: process.env.SECRET_KEY || ''
     },
-    endpoint: process.env.ENDPOINT
+    endpoint: process.env.ENDPOINT,
+    forcePathStyle: true
 });
 
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    maxAge: 86400 // 24 hours
 }));
 
 app.get('/pre-signed-url', async (req, res) => {
@@ -36,7 +39,9 @@ app.get('/pre-signed-url', async (req, res) => {
         const key = `models/${Date.now()}_${Math.random()}.zip`;
         const command = new PutObjectCommand({
             Bucket: process.env.BUCKET_NAME || '',
-            Key: key
+            Key: key,
+            ContentType: 'application/zip',
+            ChecksumAlgorithm: 'CRC32'
         });
         
         console.log('Creating presigned URL with:', {

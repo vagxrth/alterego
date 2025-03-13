@@ -129,20 +129,45 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
       console.log('Uploading to presigned URL:', presignedUrl);
       
       try {
-        // Use fetch instead of axios for the S3 upload
-        const uploadResponse = await fetch(presignedUrl, {
-          method: 'PUT',
-          body: zipBlob,
-          headers: {
-            'Content-Type': 'application/zip',
-          },
+        // Use XMLHttpRequest instead of fetch for better compatibility with S3
+        const xhr = new XMLHttpRequest();
+        
+        // Create a promise to handle the XHR request
+        const uploadPromise = new Promise<void>((resolve, reject) => {
+          xhr.open('PUT', presignedUrl, true);
+          xhr.setRequestHeader('Content-Type', 'application/zip');
+          
+          // Set up progress tracking
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = Math.round((e.loaded / e.total) * 30);
+              setUploadProgress(70 + percentComplete);
+            }
+          };
+          
+          // Set up completion handlers
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`Upload failed with status: ${xhr.status} - ${xhr.responseText}`));
+            }
+          };
+          
+          xhr.onerror = () => {
+            reject(new Error('Network error occurred during upload'));
+          };
+          
+          xhr.onabort = () => {
+            reject(new Error('Upload aborted'));
+          };
+          
+          // Send the zip blob
+          xhr.send(zipBlob);
         });
         
-        if (!uploadResponse.ok) {
-          const errorText = await uploadResponse.text();
-          console.error('Upload response:', errorText);
-          throw new Error(`Upload failed with status: ${uploadResponse.status} - ${errorText}`);
-        }
+        // Wait for the upload to complete
+        await uploadPromise;
         
         // Step 4: Notify parent component about successful upload
         setUploadProgress(100);
@@ -155,12 +180,12 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
         if (onZipUploaded) {
           onZipUploaded(zipUrl, key);
         }
+        
+        setIsUploading(false);
       } catch (uploadError: any) {
         console.error('Error during S3 upload:', uploadError);
         throw new Error(`S3 upload failed: ${uploadError.message}`);
       }
-      
-      setIsUploading(false);
     } catch (error: any) {
       console.error('Error uploading images:', error);
       
