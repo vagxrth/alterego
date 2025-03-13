@@ -182,9 +182,10 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
         }
         
         setIsUploading(false);
-      } catch (uploadError: any) {
+      } catch (uploadError: Error | unknown) {
         console.error('Error during S3 upload:', uploadError);
-        throw new Error(`S3 upload failed: ${uploadError.message}`);
+        const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
+        throw new Error(`S3 upload failed: ${errorMessage}`);
       }
     } catch (error: any) {
       console.error('Error uploading images:', error);

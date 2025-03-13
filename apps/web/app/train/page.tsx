@@ -6,7 +6,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "../../components/ui/card"
@@ -72,7 +71,7 @@ const TrainPage = () => {
         try {
             setIsSubmitting(true);
             
-            const response = await axios.post(`${BACKEND_URL}/train`, {
+            await axios.post(`${BACKEND_URL}/train`, {
                 name: formData.name,
                 type: formData.type,
                 age: formData.age,
