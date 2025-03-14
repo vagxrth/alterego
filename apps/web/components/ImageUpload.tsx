@@ -171,7 +171,7 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
         const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
         throw new Error(`S3 upload failed: ${errorMessage}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading images:', error);
       setIsUploading(false);
       setUploadProgress(0);
