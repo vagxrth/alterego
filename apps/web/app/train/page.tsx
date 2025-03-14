@@ -37,6 +37,7 @@ const TrainPage = () => {
         zipKey: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
