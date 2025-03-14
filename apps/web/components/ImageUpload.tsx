@@ -48,7 +48,6 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
     const updatedFiles = [...files, ...newFiles].slice(0, maxImages);
     setFiles(updatedFiles);
     
-    // Create previews for new files
     const newPreviews: Promise<string>[] = newFiles.map(file => 
       new Promise((resolve) => {
         const reader = new FileReader();
@@ -92,30 +91,24 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
       setIsUploading(true);
       setUploadProgress(10);
       
-      // Step 1: Create a zip file containing all images
       const zip = new JSZip();
       
-      // Add each file to the zip
       files.forEach((file, index) => {
         zip.file(`image_${index + 1}.${file.name.split('.').pop()}`, file);
       });
       
-      // Generate the zip file
       setUploadProgress(30);
       const zipBlob = await zip.generateAsync({ 
         type: 'blob',
         compression: 'DEFLATE',
         compressionOptions: { level: 6 }
       }, (metadata) => {
-        // Update progress during zip creation
         setUploadProgress(30 + Math.floor(metadata.percent * 0.3));
       });
       
-      // Step 2: Get a presigned URL from the backend
       setUploadProgress(60);
       console.log('Requesting presigned URL from:', `${BACKEND_URL}/pre-signed-url`);
       
-      // Add a timestamp to prevent caching issues
       const presignedResponse = await axios.get(`${BACKEND_URL}/pre-signed-url?t=${Date.now()}`);
       console.log('Presigned URL response:', presignedResponse.data);
       const { url: presignedUrl, key } = presignedResponse.data;
@@ -124,15 +117,12 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
         throw new Error('No presigned URL received from server');
       }
       
-      // Step 3: Upload the zip file to the presigned URL
       setUploadProgress(70);
       console.log('Uploading to presigned URL:', presignedUrl);
       
       try {
-        // Use XMLHttpRequest instead of fetch for better compatibility with S3
         const xhr = new XMLHttpRequest();
         
-        // Create a promise to handle the XHR request
         const uploadPromise = new Promise<void>((resolve, reject) => {
           xhr.open('PUT', presignedUrl, true);
           xhr.setRequestHeader('Content-Type', 'application/zip');
@@ -145,7 +135,6 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
             }
           };
           
-          // Set up completion handlers
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               resolve();
@@ -162,21 +151,16 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
             reject(new Error('Upload aborted'));
           };
           
-          // Send the zip blob
           xhr.send(zipBlob);
         });
         
-        // Wait for the upload to complete
         await uploadPromise;
         
-        // Step 4: Notify parent component about successful upload
         setUploadProgress(100);
         
-        // Construct the final URL for the zip file (remove query parameters)
         const zipUrl = presignedUrl.split('?')[0];
         console.log('Final zip URL:', zipUrl);
         
-        // Notify parent component
         if (onZipUploaded) {
           onZipUploaded(zipUrl, key);
         }
@@ -189,25 +173,6 @@ export function ImageUpload({ onImagesUpload, maxImages = 10, onZipUploaded }: I
       }
     } catch (error: any) {
       console.error('Error uploading images:', error);
-      
-      // More detailed error logging
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error response headers:', error.response.headers);
-        alert(`Upload failed: ${error.response.status} - ${error.response.data?.message || 'Server error'}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
-        alert('Upload failed: No response from server. Check your network connection.');
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-        alert(`Upload failed: ${error.message}`);
-      }
-      
       setIsUploading(false);
       setUploadProgress(0);
     }
