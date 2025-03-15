@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useState } from 'react'
 import { Button } from "../../components/ui/button"
 import {
     Card,
@@ -23,6 +23,7 @@ import { ImageUpload } from '../../components/ImageUpload'
 import axios from 'axios'
 import { BACKEND_URL } from '../config'
 import { useRouter } from 'next/navigation'
+import { TrainModelInput } from '../../../../packages/schema/inferred-types'
 
 const TrainPage = () => {
     const router = useRouter();
@@ -39,6 +40,13 @@ const TrainPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+    const [zipURL, setZipURL] = useState('');
+    const [type, setType] = useState("Man");
+    const [age, setAge] = useState();
+    const [ethinicity, setEthinicity] = useState();
+    const [eyeColor, setEyeColor] = useState();
+    const [bald, setBald] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -92,6 +100,17 @@ const TrainPage = () => {
             setIsSubmitting(false);
         }
     };
+
+    const trainModel = () => {
+        const input: TrainModelInput = {
+            zipURL,
+            type,
+            age,
+            ethinicity,
+            eyeColor,
+            bald
+        }
+    }
 
     return (
         <div className='flex items-center justify-center min-h-screen py-8'>
