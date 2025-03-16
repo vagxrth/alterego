@@ -23,15 +23,16 @@ import { ImageUpload } from '../../components/ImageUpload'
 import axios from 'axios'
 import { BACKEND_URL } from '../config'
 import { useRouter } from 'next/navigation'
+import { TrainModelInput, PersonTypeValues, EthnicityTypeValues, EyeColorTypeValues } from '../../../../packages/schema/inferred-types'
 
 const TrainPage = () => {
     const router = useRouter();
     const [formData, setFormData] = useState({
         name: '',
-        type: '',
-        age: '',
-        ethinicity: '',
-        eyeColor: '',
+        type: 'Man' as PersonTypeValues,
+        age: 25,
+        ethinicity: 'White' as EthnicityTypeValues,
+        eyeColor: 'Brown' as EyeColorTypeValues,
         bald: false,
         zipURL: '',
         zipKey: ''
@@ -42,11 +43,49 @@ const TrainPage = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
-        setFormData(prev => ({ ...prev, [id]: value }));
+        if (id === 'age') {
+            setFormData(prev => ({ ...prev, [id]: parseInt(value) || 0 }));
+        } else {
+            setFormData(prev => ({ ...prev, [id]: value }));
+        }
     };
 
     const handleSelectChange = (id: string, value: string) => {
-        setFormData(prev => ({ ...prev, [id]: value }));
+        if (id === 'type') {
+            // Map UI values to schema values
+            const typeMap: Record<string, PersonTypeValues> = {
+                'man': 'Man',
+                'woman': 'Woman',
+                'others': 'Other'
+            };
+            const mappedValue = typeMap[value] || 'Man';
+            setFormData(prev => ({ ...prev, [id]: mappedValue }));
+        } else if (id === 'ethinicity') {
+            // Map UI values to schema values
+            const ethnicityMap: Record<string, EthnicityTypeValues> = {
+                'white': 'White',
+                'black': 'Black',
+                'american': 'American',
+                'indian': 'Indian',
+                'eastasian': 'EastAsian'
+            };
+            const mappedValue = ethnicityMap[value] || 'White';
+            setFormData(prev => ({ ...prev, [id]: mappedValue }));
+        } else if (id === 'eyeColor') {
+            // Map UI values to schema values
+            const eyeColorMap: Record<string, EyeColorTypeValues> = {
+                'brown': 'Brown',
+                'black': 'Black',
+                'hazel': 'Hazel',
+                'blue': 'Blue',
+                'green': 'Green',
+                'gray': 'Gray'
+            };
+            const mappedValue = eyeColorMap[value] || 'Brown';
+            setFormData(prev => ({ ...prev, [id]: mappedValue }));
+        } else {
+            setFormData(prev => ({ ...prev, [id]: value }));
+        }
     };
 
     const handleSwitchChange = (checked: boolean) => {
@@ -64,7 +103,7 @@ const TrainPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.name || !formData.type || !formData.zipURL) {
+        if (!formData.name || !formData.zipURL) {
             alert('Please fill in all required fields and upload images');
             return;
         }
@@ -72,7 +111,7 @@ const TrainPage = () => {
         try {
             setIsSubmitting(true);
             
-            await axios.post(`${BACKEND_URL}/train`, {
+            const trainModelInput: TrainModelInput = {
                 name: formData.name,
                 type: formData.type,
                 age: formData.age,
@@ -80,7 +119,9 @@ const TrainPage = () => {
                 eyeColor: formData.eyeColor,
                 bald: formData.bald,
                 zipURL: formData.zipURL
-            });
+            };
+            
+            await axios.post(`${BACKEND_URL}/train`, trainModelInput);
             
             // Redirect to model page or dashboard
             alert('Model training started successfully!');
@@ -122,7 +163,7 @@ const TrainPage = () => {
                                     <SelectContent position="popper">
                                         <SelectItem value="man">Man</SelectItem>
                                         <SelectItem value="woman">Woman</SelectItem>
-                                        <SelectItem value="others">Others</SelectItem>
+                                        <SelectItem value="others">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -130,6 +171,7 @@ const TrainPage = () => {
                                 <Label htmlFor="age">Age</Label>
                                 <Input 
                                     id="age" 
+                                    type="number"
                                     placeholder="Age of the model" 
                                     value={formData.age}
                                     onChange={handleInputChange}
