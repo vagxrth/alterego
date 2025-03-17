@@ -1,13 +1,17 @@
+'use client'
 import {
     SignInButton,
     SignUpButton,
     SignedIn,
     SignedOut,
-    UserButton
+    UserButton,
+    useUser
 } from '@clerk/nextjs'
 import Link from 'next/link'
 
 const AppBar = () => {
+    const { isLoaded } = useUser()
+
     return (
         <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,21 +21,32 @@ const AppBar = () => {
                     </Link>
 
                     <div className="flex items-center space-x-4">
-                        <SignedOut>
-                            <SignInButton mode="modal">
-                                <button className="text-gray-700 hover:text-gray-900 px-3 py-2 cursor-pointer rounded-md text-sm font-medium">
-                                    Sign In
-                                </button>
-                            </SignInButton>
-                            <SignUpButton mode="modal">
-                                <button className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md cursor-pointer text-sm font-medium">
-                                    Sign Up
-                                </button>
-                            </SignUpButton>
-                        </SignedOut>
-                        <SignedIn>
-                            <UserButton afterSignOutUrl="/" />
-                        </SignedIn>
+                        {isLoaded && (
+                            <>
+                                <SignedOut>
+                                    <SignInButton mode="modal">
+                                        <button className="text-gray-700 hover:text-gray-900 px-3 py-2 cursor-pointer rounded-md text-sm font-medium">
+                                            Sign In
+                                        </button>
+                                    </SignInButton>
+                                    <SignUpButton mode="modal">
+                                        <button className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md cursor-pointer text-sm font-medium">
+                                            Sign Up
+                                        </button>
+                                    </SignUpButton>
+                                </SignedOut>
+                                <SignedIn>
+                                    <UserButton 
+                                        afterSignOutUrl="/"
+                                        appearance={{
+                                            elements: {
+                                                avatarBox: "w-8 h-8"
+                                            }
+                                        }}
+                                    />
+                                </SignedIn>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
