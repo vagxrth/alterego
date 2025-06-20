@@ -10,7 +10,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-app.post("/model/train", async(req: Request, res: Response) => {
+app.post("/model/train", async (req: Request, res: Response) => {
   const parsedBody = TrainModelSchema.safeParse(req.body);
   if (!parsedBody.success) {
     res.status(411).json({ error: parsedBody.error.message });
@@ -33,7 +33,7 @@ app.post("/model/train", async(req: Request, res: Response) => {
   res.status(200).json({ modelId: model.id });
 });
 
-app.post("/model/generate", async(req: Request, res: Response) => {
+app.post("/model/generate", async (req: Request, res: Response) => {
   const parsedBody = GenerateImageSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -54,16 +54,40 @@ app.post("/model/generate", async(req: Request, res: Response) => {
   res.status(200).json({ imageId: images.id });
 });
 
-app.post("/pack/generate", (req, res) => {
-  
+app.post("/pack/generate", async (req: Request, res: Response) => {
+  const parsedBody = GenerateImagesFromPackSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    res.status(411).json({ error: parsedBody.error.message });
+    return;
+  }
+
+  const { packId, modelId } = parsedBody.data;
+
+  const prompts = await prisma.packPrompts.findMany({
+    where: {
+      packId,
+    },
+  })
+
+  const images = await prisma.outputImages.createManyAndReturn({
+    data:
+      prompts.map((prompt) => ({
+        prompt: prompt.prompt,
+        modelId,
+        imageUrl: "",
+      })),
+  });
+
+  res.status(200).json({ imageIds: images.map((image) => image.id) });
 });
 
 app.get("/packs", (req, res) => {
-  
+
 });
 
 app.get("/images", (req, res) => {
-  
+
 });
 
 app.listen(PORT, () => {
