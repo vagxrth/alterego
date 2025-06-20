@@ -17,9 +17,9 @@ app.post("/model/train", async(req: Request, res: Response) => {
     return;
   }
 
-  const { name, type, age, ethnicity, eyeColor, bald, images } = parsedBody.data;
+  const { name, type, age, ethnicity, eyeColor, bald } = parsedBody.data;
 
-  await prisma.model.create({
+  const model = await prisma.model.create({
     data: {
       name,
       type,
@@ -29,10 +29,29 @@ app.post("/model/train", async(req: Request, res: Response) => {
       bald,
     },
   });
+
+  res.status(200).json({ modelId: model.id });
 });
 
-app.post("/model/generate", (req, res) => {
-  
+app.post("/model/generate", async(req: Request, res: Response) => {
+  const parsedBody = GenerateImageSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    res.status(411).json({ error: parsedBody.error.message });
+    return;
+  }
+
+  const { prompt, modelId } = parsedBody.data;
+
+  const images = await prisma.outputImages.create({
+    data: {
+      prompt,
+      modelId,
+      imageUrl: "",
+    },
+  })
+
+  res.status(200).json({ imageId: images.id });
 });
 
 app.post("/pack/generate", (req, res) => {
