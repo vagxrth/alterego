@@ -51,6 +51,21 @@ model OutputImages {
   createdAt DateTime @default(now())
 }
 
+model Pack {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  prompts   PackPrompts[]
+}
+
+model PackPrompts {
+  id        String   @id @default(uuid())
+  packId    String
+  pack      Pack     @relation(fields: [packId], references: [id])
+  prompt    String
+  createdAt DateTime @default(now())
+}
+
 enum ModelType {
   Male
   Female
