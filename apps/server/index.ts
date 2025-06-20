@@ -82,12 +82,30 @@ app.post("/pack/generate", async (req: Request, res: Response) => {
   res.status(200).json({ imageIds: images.map((image) => image.id) });
 });
 
-app.get("/packs", (req, res) => {
-
+app.get("/packs", async(req, res) => {
+  const packs = await prisma.pack.findMany();
+  res.status(200).json({ packs });
 });
 
-app.get("/images", (req, res) => {
-
+app.get("/images", async(req, res) => {
+  const imageIds = req.query.imageIds as string[];
+  const limit = req.query.limit as string;
+  const offset = req.query.offset as string;
+  
+  if (!imageIds) {
+    res.status(400).json({ error: "imageIds is required" });  
+    return;
+  }
+  const images = await prisma.outputImages.findMany({
+    where: {
+      id: {
+        in: imageIds,
+      },
+    },
+    take: limit ? parseInt(limit) : 10,
+    skip: offset ? parseInt(offset) : 0,
+  });
+  res.status(200).json({ images });
 });
 
 app.listen(PORT, () => {
