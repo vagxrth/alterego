@@ -45,6 +45,8 @@ model TrainingImages {
 
 model OutputImages {
   id        String   @id @default(uuid())
+  prompt    String
+  status    Status   @default(Pending)
   modelId   String
   model     Model    @relation(fields: [modelId], references: [id])
   imageUrl  String
@@ -89,4 +91,11 @@ enum ModelEyeColor {
   Hazel
   Gray
   Other
+}
+
+enum Status {
+  Pending
+  Training
+  Generated
+  Failed
 }

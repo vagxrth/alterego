@@ -13,7 +13,7 @@ export const TrainModelSchema = z.object({
 export const GenerateImageSchema = z.object({
   prompt: z.string().min(1).max(1000),
   modelId: z.string(),
-  n: z.number().min(1),
+  numberOfImages: z.number().min(1),
 });
 
 export const GenerateImagesFromPackSchema = z.object({
