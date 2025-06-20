@@ -9,3 +9,14 @@ export const TrainModelSchema = z.object({
   bald: z.boolean(),
   images: z.array(z.string()),
 });
+
+export const GenerateImageSchema = z.object({
+  prompt: z.string(),
+  modelId: z.string(),
+  n: z.number().min(1),
+});
+
+export const GenerateImagesFromPackSchema = z.object({
+  packId: z.string(),
+  modelId: z.string(),
+});
