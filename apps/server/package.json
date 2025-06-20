@@ -6,15 +6,15 @@
     "start": "bun run index.ts",
     "dev": "bun run --watch index.ts"
   },
-  "dependencies": {
-    "express": "^4.21.2"
-  },
   "devDependencies": {
+    "@repo/types": "*",
     "@types/bun": "latest",
-    "@types/express": "^4.21.2",
-    "@repo/types": "*"
+    "@types/express": "^5.0.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
