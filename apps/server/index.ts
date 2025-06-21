@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { TrainModelSchema, GenerateImageSchema, GenerateImagesFromPackSchema } from "@repo/types";
 import { prisma } from "@repo/db";
 import { FalAIModel } from "./models/FalAIModel";
-
+import { S3Client } from "bun";
 const app = express();
 
 app.use(express.json());
@@ -12,6 +12,18 @@ app.use(express.json());
 const PORT = process.env.PORT || 8080;
 
 const falAIModel = new FalAIModel();
+
+app.get("/presigned-url", async (req: Request, res: Response) => {
+  const key = `models/${Bun.randomUUIDv7()}.zip`;
+  const url = S3Client.presign(key, {
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    bucket: process.env.BUCKET_NAME,
+    endpoint: process.env.ENDPOINT,
+    expiresIn: 60 * 60,
+  })
+  res.status(200).json({ url, key });
+});
 
 app.post("/model/train", async (req: Request, res: Response) => {
   const parsedBody = TrainModelSchema.safeParse(req.body);
