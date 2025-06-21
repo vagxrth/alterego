@@ -32,6 +32,7 @@ model Model {
   bald           Boolean
   triggerWord    String?
   tensorPath     String?
+  zipUrl         String
   requestId      String?
   status         Status           @default(Pending)
   createdAt      DateTime         @default(now())
