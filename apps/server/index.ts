@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response } from "express";
 import { TrainModelSchema, GenerateImageSchema, GenerateImagesFromPackSchema } from "@repo/types";
 import { prisma } from "@repo/db";
+import { FalAIModel } from "./models/FalAIModel";
 
 const app = express();
 
@@ -9,6 +10,8 @@ app.use(express.json());
 
 
 const PORT = process.env.PORT || 8080;
+
+const falAIModel = new FalAIModel();
 
 app.post("/model/train", async (req: Request, res: Response) => {
   const parsedBody = TrainModelSchema.safeParse(req.body);
@@ -19,6 +22,8 @@ app.post("/model/train", async (req: Request, res: Response) => {
 
   const { name, type, age, ethnicity, eyeColor, bald } = parsedBody.data;
 
+  const { request_id } = await falAIModel.trainModel("" ,name);
+
   const model = await prisma.model.create({
     data: {
       name,
@@ -27,6 +32,7 @@ app.post("/model/train", async (req: Request, res: Response) => {
       ethnicity,
       eyeColor,
       bald,
+      requestId: request_id,
     },
   });
 
@@ -43,11 +49,25 @@ app.post("/model/generate", async (req: Request, res: Response) => {
 
   const { prompt, modelId } = parsedBody.data;
 
+  const model = await prisma.model.findUnique({
+    where: {
+      id: modelId,
+    },
+  });
+
+  if (!model || !model.tensorPath) {
+    res.status(404).json({ error: "Model not found" });
+    return;
+  }
+
+  const { request_id } = await falAIModel.generateImage(prompt, model.tensorPath);
+
   const images = await prisma.outputImages.create({
     data: {
       prompt,
       modelId,
       imageUrl: "",
+      requestId: request_id,
     },
   })
 
