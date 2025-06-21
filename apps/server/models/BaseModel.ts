@@ -1,7 +1,7 @@
 export abstract class BaseModel {
   constructor() {}
 
-  private async generateImage(prompt: string, tensorPath: string) {}
+  public abstract generateImage(prompt: string, tensorPath: string): Promise<{ request_id: string; response_url: string; }>;
 
-  private async trainModel(inputImages: string[], triggerWord: string) {}
+  public abstract trainModel(zipUrl: string, triggerWord: string): Promise<{ request_id: string; response_url: string; }>;
 }
