@@ -108,6 +108,18 @@ app.get("/images", async(req, res) => {
   res.status(200).json({ images });
 });
 
+app.post("/fal-ai/webhook/generate", async(req, res) => {
+  console.log(req.body);
+  //TODO: update the model status to generated
+  res.status(200).json({ message: "Webhook received" });
+});
+
+app.post("/fal-ai/webhook/train", async(req, res) => {
+  console.log(req.body);
+  //TODO: update the model status to trained
+  res.status(200).json({ message: "Webhook received" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -7,22 +7,26 @@ export class FalAIModel extends BaseModel {
     }
 
     private async generateImage(prompt: string, tensorPath: string) {
-        const result = await fal.subscribe("fal-ai/flux-lora", {
+        const { request_id, response_url } = await fal.queue.submit("fal-ai/flux-lora", {
             input: {
                 prompt: prompt,
                 loras: [{ path: tensorPath, scale: 1 }],
-            }
+            },
+            webhookUrl: `${process.env.WEBHOOK_URL}/fal-ai/webhook/generate`,
         });
 
-        return result;
+        return { request_id, response_url };
     }
 
     private async trainModel(zipUrl: string, triggerWord: string) {
-        const { request_id } = await fal.queue.submit("fal-ai/flux-lora-fast-training", {
+        const { request_id, response_url } = await fal.queue.submit("fal-ai/flux-lora-fast-training", {
             input: {
                 images_data_url: zipUrl,
+                trigger_word: triggerWord,
             },
-            webhookUrl: `${process.env.WEBHOOK_URL}/fal-ai/webhook`,
+            webhookUrl: `${process.env.WEBHOOK_URL}/fal-ai/webhook/train`,
         });
-    }
+
+        return { request_id, response_url };
+    }       
 }
