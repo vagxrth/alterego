@@ -23,16 +23,20 @@ model User {
 }
 
 model Model {
-  id        String   @id @default(uuid())
-  name      String
-  type      ModelType
-  age       Int
-  ethnicity ModelEthnicity
-  eyeColor  ModelEyeColor
-  bald      Boolean
-  createdAt DateTime @default(now())
+  id             String           @id @default(uuid())
+  name           String
+  type           ModelType
+  age            Int
+  ethnicity      ModelEthnicity
+  eyeColor       ModelEyeColor
+  bald           Boolean
+  triggerWord    String?
+  tensorPath     String?
+  requestId      String?
+  status         Status           @default(Pending)
+  createdAt      DateTime         @default(now())
   trainingImages TrainingImages[]
-  outputImages OutputImages[]
+  outputImages   OutputImages[]
 }
 
 model TrainingImages {
@@ -47,6 +51,7 @@ model OutputImages {
   id        String   @id @default(uuid())
   prompt    String
   status    Status   @default(Pending)
+  requestId String?
   modelId   String
   model     Model    @relation(fields: [modelId], references: [id])
   imageUrl  String
@@ -54,9 +59,9 @@ model OutputImages {
 }
 
 model Pack {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   name      String
-  createdAt DateTime @default(now())
+  createdAt DateTime      @default(now())
   prompts   PackPrompts[]
 }
 
@@ -96,6 +101,6 @@ enum ModelEyeColor {
 enum Status {
   Pending
   Training
-  Generated
+  Completed
   Failed
 }

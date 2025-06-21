@@ -109,15 +109,31 @@ app.get("/images", async(req, res) => {
 });
 
 app.post("/fal-ai/webhook/generate", async(req, res) => {
-  console.log(req.body);
-  //TODO: update the model status to generated
-  res.status(200).json({ message: "Webhook received" });
+  const { request_id, image_url } = req.body;
+  
+  await prisma.outputImages.updateMany({
+    where: {
+      requestId: request_id,
+    },
+    data: {
+      status: "Completed",
+      imageUrl: image_url,
+    },
+  });
 });
 
 app.post("/fal-ai/webhook/train", async(req, res) => {
-  console.log(req.body);
-  //TODO: update the model status to trained
-  res.status(200).json({ message: "Webhook received" });
+  const { request_id, tensor_path } = req.body;
+  
+  await prisma.model.updateMany({
+    where: {
+      requestId: request_id,
+    },
+    data: {
+      status: "Completed",
+      tensorPath: tensor_path,
+    },
+  });
 });
 
 app.listen(PORT, () => {
