@@ -36,16 +36,7 @@ model Model {
   requestId      String?
   status         Status           @default(Pending)
   createdAt      DateTime         @default(now())
-  trainingImages TrainingImages[]
   outputImages   OutputImages[]
-}
-
-model TrainingImages {
-  id        String   @id @default(uuid())
-  modelId   String
-  model     Model    @relation(fields: [modelId], references: [id])
-  imageUrl  String
-  createdAt DateTime @default(now())
 }
 
 model OutputImages {
