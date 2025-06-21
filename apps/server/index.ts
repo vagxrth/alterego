@@ -20,9 +20,9 @@ app.post("/model/train", async (req: Request, res: Response) => {
     return;
   }
 
-  const { name, type, age, ethnicity, eyeColor, bald } = parsedBody.data;
+  const { name, type, age, ethnicity, eyeColor, bald, zipUrl } = parsedBody.data;
 
-  const { request_id } = await falAIModel.trainModel("" ,name);
+  const { request_id } = await falAIModel.trainModel(zipUrl, name);
 
   const model = await prisma.model.create({
     data: {
@@ -32,6 +32,7 @@ app.post("/model/train", async (req: Request, res: Response) => {
       ethnicity,
       eyeColor,
       bald,
+      zipUrl,
       requestId: request_id,
     },
   });
