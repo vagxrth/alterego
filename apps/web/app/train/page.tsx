@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Sparkles, User, Eye, Calendar, Globe, X, ImageIcon } from "lucide-react";
+import { Sparkles, User, X, ImageIcon } from "lucide-react";
 
 type TrainModelFormValues = z.infer<typeof TrainModelSchema>;
 
@@ -86,7 +86,7 @@ const TrainPage = () => {
                     </h1>
                     <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                         Create a personalized AI model by providing detailed characteristics.
-                        Upload your training data and let our advanced algorithms learn your unique features.
+                        Upload your training data and let our algorithms learn your unique features.
                     </p>
                 </div>
 
@@ -113,8 +113,7 @@ const TrainPage = () => {
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-white flex items-center gap-2">
-                                                        <User className="w-4 h-4" />
+                                                    <FormLabel className="text-white">
                                                         Model Name
                                                     </FormLabel>
                                                     <FormControl>
@@ -135,8 +134,7 @@ const TrainPage = () => {
                                             name="type"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-white flex items-center gap-2">
-                                                        <User className="w-4 h-4" />
+                                                    <FormLabel className="text-white">
                                                         Gender
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -161,8 +159,7 @@ const TrainPage = () => {
                                             name="age"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-white flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4" />
+                                                    <FormLabel className="text-white">
                                                         Age
                                                     </FormLabel>
                                                     <FormControl>
@@ -187,8 +184,7 @@ const TrainPage = () => {
                                             name="ethnicity"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-white flex items-center gap-2">
-                                                        <Globe className="w-4 h-4" />
+                                                    <FormLabel className="text-white">
                                                         Ethnicity
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -227,8 +223,7 @@ const TrainPage = () => {
                                             name="eyeColor"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-white flex items-center gap-2">
-                                                        <Eye className="w-4 h-4" />
+                                                    <FormLabel className="text-white">
                                                         Eye Color
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -280,8 +275,7 @@ const TrainPage = () => {
                                     </h3>
                                     {/* Image Upload Field */}
                                     <div>
-                                        <FormLabel className="text-white flex items-center gap-2 mb-3">
-                                            <Upload className="w-4 h-4" />
+                                        <FormLabel className="text-white mb-3 block">
                                             Training Images
                                         </FormLabel>
 
