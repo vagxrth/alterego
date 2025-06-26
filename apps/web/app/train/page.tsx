@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -319,10 +320,12 @@ const TrainPage = () => {
                                                     {uploadedImages.map((file, index) => (
                                                         <div key={index} className="relative group">
                                                             <div className="aspect-square bg-gray-700 rounded-lg overflow-hidden">
-                                                                <img
+                                                                <Image
                                                                     src={URL.createObjectURL(file)}
                                                                     alt={`Upload ${index + 1}`}
-                                                                    className="w-full h-full object-cover"
+                                                                    fill
+                                                                    className="object-cover"
+                                                                    unoptimized
                                                                 />
                                                             </div>
                                                             <button
@@ -358,14 +361,6 @@ const TrainPage = () => {
                         </Form>
                     </CardContent>
                 </Card>
-
-                {/* Info Section */}
-                <div className="mt-8 text-center">
-                    <p className="text-gray-500 text-sm">
-                        Training typically takes 15-30 minutes depending on the complexity and number of images.
-                        You'll receive an email notification when your model is ready.
-                    </p>
-                </div>
             </div>
         </div>
     );
