@@ -50,14 +50,6 @@ const TrainPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uploadedImages]);
 
-    // Cleanup URLs when component unmounts
-    useEffect(() => {
-        return () => {
-            imageUrls.forEach(url => URL.revokeObjectURL(url));
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     const handleImageUpload = (files: FileList | null) => {
         if (!files) return;
 
