@@ -341,13 +341,15 @@ const TrainPage = () => {
                                                     {uploadedImages.map((file, index) => (
                                                         <div key={index} className="relative group">
                                                             <div className="aspect-square bg-gray-700 rounded-lg overflow-hidden">
-                                                                <Image
-                                                                    src={imageUrls[index] || ''}
-                                                                    alt={`Upload ${index + 1}`}
-                                                                    fill
-                                                                    className="object-cover"
-                                                                    unoptimized
-                                                                />
+                                                                {imageUrls[index] && (
+                                                                    <Image
+                                                                        src={imageUrls[index]}
+                                                                        alt={`Upload ${index + 1}`}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                        unoptimized
+                                                                    />
+                                                                )}
                                                             </div>
                                                             <button
                                                                 type="button"
