@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,20 +17,46 @@ import { Sparkles, User, X, ImageIcon } from "lucide-react";
 type TrainModelFormValues = z.infer<typeof TrainModelSchema>;
 
 const TrainPage = () => {
-    const [uploadedImages, setUploadedImages] = React.useState<File[]>([]);
-    const [dragActive, setDragActive] = React.useState(false);
+    const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const [dragActive, setDragActive] = useState(false);
 
     const form = useForm<TrainModelFormValues>({
         resolver: zodResolver(TrainModelSchema),
         defaultValues: {
             name: "",
             type: "Male",
-            age: 25,
+            age: 18,
             ethnicity: "Other",
             eyeColor: "Brown",
             bald: false,
+            zipUrl: "",
         },
     });
+
+    // Effect to manage object URLs and cleanup
+    useEffect(() => {
+        // Revoke previous URLs
+        imageUrls.forEach(url => URL.revokeObjectURL(url));
+
+        // Create new URLs for uploaded images
+        const newUrls = uploadedImages.map(file => URL.createObjectURL(file));
+        setImageUrls(newUrls);
+
+        // Cleanup function to revoke URLs when component unmounts or uploadedImages change
+        return () => {
+            newUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [uploadedImages]);
+
+    // Cleanup URLs when component unmounts
+    useEffect(() => {
+        return () => {
+            imageUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleImageUpload = (files: FileList | null) => {
         if (!files) return;
@@ -171,7 +197,7 @@ const TrainPage = () => {
                                                             placeholder="Enter age"
                                                             className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20"
                                                             {...field}
-                                                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                                            onChange={(e) => field.onChange(e.target.value)}
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -321,7 +347,7 @@ const TrainPage = () => {
                                                         <div key={index} className="relative group">
                                                             <div className="aspect-square bg-gray-700 rounded-lg overflow-hidden">
                                                                 <Image
-                                                                    src={URL.createObjectURL(file)}
+                                                                    src={imageUrls[index] || ''}
                                                                     alt={`Upload ${index + 1}`}
                                                                     fill
                                                                     className="object-cover"
