@@ -189,7 +189,10 @@ const TrainPage = () => {
                                                             placeholder="Enter age"
                                                             className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20"
                                                             {...field}
-                                                            onChange={(e) => field.onChange(e.target.value)}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                field.onChange(value === '' ? undefined : Number(value));
+                                                            }}
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
