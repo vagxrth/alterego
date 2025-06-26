@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,31 +8,68 @@ import { TrainModelSchema } from "@repo/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Sparkles, User, Palette, Eye, Calendar, Globe } from "lucide-react";
+import { Upload, Sparkles, User, Eye, Calendar, Globe, X, ImageIcon } from "lucide-react";
 
 type TrainModelFormValues = z.infer<typeof TrainModelSchema>;
 
 const TrainPage = () => {
-    const form = useForm<TrainModelFormValues>({
-        resolver: zodResolver(TrainModelSchema),
-        defaultValues: {
-            name: "",
-            type: "Male",
-            age: 25,
-            ethnicity: "Other",
-            eyeColor: "Brown",
-            bald: false,
-            zipUrl: "",
-        },
-    });
+  const [uploadedImages, setUploadedImages] = React.useState<File[]>([]);
+  const [dragActive, setDragActive] = React.useState(false);
 
-    const onSubmit = (data: TrainModelFormValues) => {
-        console.log("Training model with data:", data);
-        // TODO: Implement actual model training API call
-    };
+  const form = useForm<TrainModelFormValues>({
+    resolver: zodResolver(TrainModelSchema),
+    defaultValues: {
+      name: "",
+      type: "Male",
+      age: 25,
+      ethnicity: "Other",
+      eyeColor: "Brown",
+      bald: false,
+    },
+  });
+
+      const handleImageUpload = (files: FileList | null) => {
+    if (!files) return;
+    
+    const imageFiles = Array.from(files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    setUploadedImages(prev => [...prev, ...imageFiles]);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files);
+    }
+  };
+
+  const onSubmit = (data: TrainModelFormValues) => {
+    console.log("Training model with data:", data);
+    console.log("Uploaded images:", uploadedImages);
+    // TODO: Implement actual model training API call with images
+  };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 p-4 md:p-8">
@@ -203,28 +241,76 @@ const TrainPage = () => {
                                         )}
                                     />
 
-                                    {/* Training Data URL Field */}
-                                    <FormField
-                                        control={form.control}
-                                        name="zipUrl"
-                                        render={({ field }) => (
-                                            <FormItem className="md:col-span-2">
-                                                <FormLabel className="text-white flex items-center gap-2">
-                                                    <Upload className="w-4 h-4" />
-                                                    Training Data URL
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="url"
-                                                        placeholder="https://example.com/training-data.zip"
-                                                        className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20"
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                                       {/* Image Upload Field */}
+                   <div className="md:col-span-2">
+                     <FormLabel className="text-white flex items-center gap-2 mb-3">
+                       <Upload className="w-4 h-4" />
+                       Training Images
+                     </FormLabel>
+                     
+                     {/* Upload Area */}
+                     <div
+                       className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+                         dragActive 
+                           ? 'border-purple-500 bg-purple-500/10' 
+                           : 'border-gray-600 bg-gray-800/30'
+                       }`}
+                       onDragEnter={handleDrag}
+                       onDragLeave={handleDrag}
+                       onDragOver={handleDrag}
+                       onDrop={handleDrop}
+                     >
+                       <input
+                         type="file"
+                         multiple
+                         accept="image/*"
+                         onChange={(e) => handleImageUpload(e.target.files)}
+                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                       />
+                       
+                       <div className="text-center">
+                         <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                         <div className="text-white font-medium mb-2">
+                           Drop images here or click to upload
+                         </div>
+                         <div className="text-gray-400 text-sm">
+                           Support for multiple images (JPG, PNG, GIF)
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* Uploaded Images Preview */}
+                     {uploadedImages.length > 0 && (
+                       <div className="mt-4">
+                         <div className="text-white text-sm font-medium mb-3">
+                           Uploaded Images ({uploadedImages.length})
+                         </div>
+                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                           {uploadedImages.map((file, index) => (
+                             <div key={index} className="relative group">
+                               <div className="aspect-square bg-gray-700 rounded-lg overflow-hidden">
+                                 <img
+                                   src={URL.createObjectURL(file)}
+                                   alt={`Upload ${index + 1}`}
+                                   className="w-full h-full object-cover"
+                                 />
+                               </div>
+                               <button
+                                 type="button"
+                                 onClick={() => removeImage(index)}
+                                 className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                               >
+                                 <X className="w-3 h-3" />
+                               </button>
+                               <div className="text-xs text-gray-400 mt-1 truncate">
+                                 {file.name}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+                   </div>
                                 </div>
 
                                 {/* Bald Checkbox */}
