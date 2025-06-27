@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, User, X, ImageIcon } from "lucide-react";
+import axios from "axios";
+import JSZip from "jszip";
 
 type TrainModelFormValues = z.infer<typeof TrainModelSchema>;
 
@@ -20,6 +22,8 @@ const TrainPage = () => {
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [dragActive, setDragActive] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [zipUrl, setZipUrl] = useState<string>("");
 
     const form = useForm<TrainModelFormValues>({
         resolver: zodResolver(TrainModelSchema),
@@ -50,18 +54,65 @@ const TrainPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uploadedImages]);
 
-    const handleImageUpload = (files: FileList | null) => {
+    const handleImageUpload = async (files: FileList | null) => {
         if (!files) return;
 
         const imageFiles = Array.from(files).filter(file =>
             file.type.startsWith('image/')
         );
 
-        setUploadedImages(prev => [...prev, ...imageFiles]);
+        const newImages = [...uploadedImages, ...imageFiles];
+        setUploadedImages(newImages);
+
+        // Automatically zip and upload when images are selected
+        if (newImages.length > 0) {
+            await zipAndUploadImages(newImages);
+        }
     };
 
-    const removeImage = (index: number) => {
-        setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    const zipAndUploadImages = async (images: File[]) => {
+        setIsUploading(true);
+        
+        try {
+            const zip = new JSZip();
+            
+            const BACKEND_URL = "http://localhost:8080";
+            const res = await axios.get(`${BACKEND_URL}/pre-sign`);
+            const presignedUrl = res.data.url;
+
+            for (const file of images) {
+                const content = await file.arrayBuffer();
+                zip.file(file.name, content);
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            
+            await axios.put(presignedUrl, content);
+
+            const uploadedZipUrl = presignedUrl.split('?')[0];
+            setZipUrl(uploadedZipUrl);
+            
+            form.setValue('zipUrl', uploadedZipUrl);
+
+        } catch (error) {
+            console.error("Error uploading images:", error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const removeImage = async (index: number) => {
+        const newImages = uploadedImages.filter((_, i) => i !== index);
+        setUploadedImages(newImages);
+        
+        // Re-zip and upload the remaining images
+        if (newImages.length > 0) {
+            await zipAndUploadImages(newImages);
+        } else {
+            // Clear the zip URL if no images remain
+            setZipUrl("");
+            form.setValue('zipUrl', "");
+        }
     };
 
     const handleDrag = (e: React.DragEvent) => {
@@ -334,8 +385,18 @@ const TrainPage = () => {
                                         {/* Uploaded Images Preview */}
                                         {uploadedImages.length > 0 && (
                                             <div className="mt-4">
-                                                <div className="text-white text-sm font-medium mb-3">
+                                                <div className="text-white text-sm font-medium mb-3 flex items-center gap-2">
                                                     Uploaded Images ({uploadedImages.length})
+                                                    {isUploading && (
+                                                        <span className="text-purple-400 text-xs">
+                                                            Uploading...
+                                                        </span>
+                                                    )}
+                                                    {zipUrl && !isUploading && (
+                                                        <span className="text-green-400 text-xs">
+                                                            ✓ Ready for training
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                     {uploadedImages.map((file, index) => (
