@@ -89,10 +89,19 @@ const TrainPage = () => {
             
             await axios.put(presignedUrl, content);
 
-            const uploadedZipUrl = presignedUrl.split('?')[0];
-            setZipUrl(uploadedZipUrl);
-            
-            form.setValue('zipUrl', uploadedZipUrl);
+            const urlWithoutQuery = presignedUrl.split('?')[0];
+            const urlParts = urlWithoutQuery.split('/');
+            const modelsIndex = urlParts.findIndex((part: string) => part === 'models');
+            if (modelsIndex !== -1) {
+                const pathAfterBucket = urlParts.slice(modelsIndex).join('/');
+                const publicUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}/${pathAfterBucket}`;
+                setZipUrl(publicUrl);
+                form.setValue('zipUrl', publicUrl);
+            } else {
+                const uploadedZipUrl = urlWithoutQuery;
+                setZipUrl(uploadedZipUrl);
+                form.setValue('zipUrl', uploadedZipUrl);
+            }
 
         } catch (error) {
             console.error("Error uploading images:", error);
@@ -105,11 +114,9 @@ const TrainPage = () => {
         const newImages = uploadedImages.filter((_, i) => i !== index);
         setUploadedImages(newImages);
         
-        // Re-zip and upload the remaining images
         if (newImages.length > 0) {
             await zipAndUploadImages(newImages);
         } else {
-            // Clear the zip URL if no images remain
             setZipUrl("");
             form.setValue('zipUrl', "");
         }
@@ -135,7 +142,17 @@ const TrainPage = () => {
         }
     };
 
-    const onSubmit = (data: TrainModelFormValues) => {
+    const onSubmit = async(data: TrainModelFormValues) => {
+        const response = await axios.post(`http://localhost:8080/model/train`, {
+            name: data.name,
+            type: data.type,
+            age: data.age,
+            ethnicity: data.ethnicity,
+            eyeColor: data.eyeColor,
+            bald: data.bald,
+            zipUrl: data.zipUrl,
+        })
+        console.log("Response:", response);
         console.log("Training model with data:", data);
         console.log("Uploaded images:", uploadedImages);
         // TODO: Implement actual model training API call with images
@@ -431,7 +448,7 @@ const TrainPage = () => {
                                 </div>
 
                                 {/* Submit Button */}
-                                <div className="flex justify-center pt-6">
+                                <div className="flex justify-center pt-6 gap-4">
                                     <Button
                                         type="submit"
                                         size="lg"
