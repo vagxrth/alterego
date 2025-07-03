@@ -72,10 +72,10 @@ const TrainPage = () => {
 
     const zipAndUploadImages = async (images: File[]) => {
         setIsUploading(true);
-        
+
         try {
             const zip = new JSZip();
-            
+
             const BACKEND_URL = "http://localhost:8080";
             const res = await axios.get(`${BACKEND_URL}/pre-sign`);
             const presignedUrl = res.data.url;
@@ -86,13 +86,22 @@ const TrainPage = () => {
             }
 
             const content = await zip.generateAsync({ type: "blob" });
-            
+
             await axios.put(presignedUrl, content);
 
-            const uploadedZipUrl = presignedUrl.split('?')[0];
-            setZipUrl(uploadedZipUrl);
-            
-            form.setValue('zipUrl', uploadedZipUrl);
+            const urlWithoutQuery = presignedUrl.split('?')[0];
+            const urlParts = urlWithoutQuery.split('/');
+            const modelsIndex = urlParts.findIndex((part: string) => part === 'models');
+            if (modelsIndex !== -1) {
+                const pathAfterBucket = urlParts.slice(modelsIndex).join('/');
+                const publicUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}/${pathAfterBucket}`;
+                setZipUrl(publicUrl);
+                form.setValue('zipUrl', publicUrl);
+            } else {
+                const uploadedZipUrl = urlWithoutQuery;
+                setZipUrl(uploadedZipUrl);
+                form.setValue('zipUrl', uploadedZipUrl);
+            }
 
         } catch (error) {
             console.error("Error uploading images:", error);
@@ -104,7 +113,7 @@ const TrainPage = () => {
     const removeImage = async (index: number) => {
         const newImages = uploadedImages.filter((_, i) => i !== index);
         setUploadedImages(newImages);
-        
+
         // Re-zip and upload the remaining images
         if (newImages.length > 0) {
             await zipAndUploadImages(newImages);
@@ -135,7 +144,16 @@ const TrainPage = () => {
         }
     };
 
-    const onSubmit = (data: TrainModelFormValues) => {
+    const onSubmit = async (data: TrainModelFormValues) => {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/model/train`, {
+            name: data.name,
+            type: data.type,
+            age: data.age,
+            ethnicity: data.ethnicity,
+            eyeColor: data.eyeColor,
+            bald: data.bald,
+            zipUrl: data.zipUrl,
+        })
         console.log("Training model with data:", data);
         console.log("Uploaded images:", uploadedImages);
         // TODO: Implement actual model training API call with images
