@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles, User, X, ImageIcon } from "lucide-react";
 import axios from "axios";
 import JSZip from "jszip";
+import { useAuth } from "@clerk/nextjs";
 
 type TrainModelFormValues = z.infer<typeof TrainModelSchema>;
 
@@ -24,6 +25,8 @@ const TrainPage = () => {
     const [dragActive, setDragActive] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [zipUrl, setZipUrl] = useState<string>("");
+
+    const { getToken } = useAuth();
 
     const form = useForm<TrainModelFormValues>({
         resolver: zodResolver(TrainModelSchema),
@@ -143,6 +146,7 @@ const TrainPage = () => {
     };
 
     const onSubmit = async(data: TrainModelFormValues) => {
+        const token = await getToken();
         const response = await axios.post(`http://localhost:8080/model/train`, {
             name: data.name,
             type: data.type,
@@ -151,7 +155,13 @@ const TrainPage = () => {
             eyeColor: data.eyeColor,
             bald: data.bald,
             zipUrl: data.zipUrl,
-        })
+        },
+        {
+            headers: {
+                token: `Bearer ${token}`,
+            },
+        }
+        )
         console.log("Response:", response);
         console.log("Training model with data:", data);
         console.log("Uploaded images:", uploadedImages);
