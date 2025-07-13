@@ -5,6 +5,7 @@ import { prisma } from "@repo/db";
 import { FalAIModel } from "./models/FalAIModel";
 import { S3Client } from "bun";
 import cors from "cors";
+import { authMiddleware } from "./middleware";
 
 const app = express();
 
@@ -31,7 +32,7 @@ app.get("/pre-sign", async (req: Request, res: Response) => {
   res.status(200).json({ url, key });
 });
 
-app.post("/model/train", async (req: Request, res: Response) => {
+app.post("/model/train", authMiddleware, async (req: Request, res: Response) => {
   const parsedBody = TrainModelSchema.safeParse(req.body);
   if (!parsedBody.success) {
     res.status(411).json({ error: parsedBody.error.message });
@@ -52,13 +53,14 @@ app.post("/model/train", async (req: Request, res: Response) => {
       bald,
       zipUrl,
       requestId: request_id,
+      userId: req.userId!,
     },
   });
 
   res.status(200).json({ modelId: model.id });
 });
 
-app.post("/model/generate", async (req: Request, res: Response) => {
+app.post("/model/generate", authMiddleware, async (req: Request, res: Response) => {
   const parsedBody = GenerateImageSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -87,13 +89,14 @@ app.post("/model/generate", async (req: Request, res: Response) => {
       modelId,
       imageUrl: "",
       requestId: request_id,
+      userId: req.userId!,
     },
   })
 
   res.status(200).json({ imageId: images.id });
 });
 
-app.post("/pack/generate", async (req: Request, res: Response) => {
+app.post("/pack/generate", authMiddleware, async (req: Request, res: Response) => {
   const parsedBody = GenerateImagesFromPackSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -129,6 +132,7 @@ app.post("/pack/generate", async (req: Request, res: Response) => {
         modelId,
         imageUrl: "",
         requestId: requestIds[index].request_id, 
+        userId: req.userId!,
       })),
   });
 
@@ -140,7 +144,7 @@ app.get("/packs", async(req, res) => {
   res.status(200).json({ packs });
 });
 
-app.get("/images", async(req, res) => {
+app.get("/images", authMiddleware, async(req, res) => {
   const imageIds = req.query.imageIds as string[];
   const limit = req.query.limit as string;
   const offset = req.query.offset as string;
@@ -154,6 +158,7 @@ app.get("/images", async(req, res) => {
       id: {
         in: imageIds,
       },
+      userId: req.userId!,
     },
     take: limit ? parseInt(limit) : 10,
     skip: offset ? parseInt(offset) : 0,

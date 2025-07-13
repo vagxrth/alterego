@@ -147,6 +147,10 @@ const TrainPage = () => {
 
     const onSubmit = async(data: TrainModelFormValues) => {
         const token = await getToken();
+        if (!token) {
+            console.error("User not authenticated!");
+            return;
+        }
         const response = await axios.post(`http://localhost:8080/model/train`, {
             name: data.name,
             type: data.type,
@@ -158,7 +162,7 @@ const TrainPage = () => {
         },
         {
             headers: {
-                token: `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
             },
         }
         )

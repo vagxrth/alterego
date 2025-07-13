@@ -20,6 +20,8 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  models    Model[]
+  outputImages OutputImages[]
 }
 
 model Model {
@@ -37,6 +39,8 @@ model Model {
   status         Status           @default(Pending)
   createdAt      DateTime         @default(now())
   outputImages   OutputImages[]
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
 }
 
 model OutputImages {
@@ -48,6 +52,8 @@ model OutputImages {
   model     Model    @relation(fields: [modelId], references: [id])
   imageUrl  String
   createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Pack {
